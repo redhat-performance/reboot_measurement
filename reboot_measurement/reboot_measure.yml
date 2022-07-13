@@ -1,0 +1,114 @@
+---
+#
+# Several files required to run
+#   ansible_vars.yml
+#   ansible_test_group
+#   ignore.yml
+#
+# Files content/format
+# ansible_vars.yml
+#
+# ---
+# config_info:
+#   test_user: <user logging in as>
+#   ssh_key: <full path to the ssh key to use>
+#   user_parent: <parent directory of the users home directory>
+#
+#  ansible_test_group
+#
+# ---
+# test_group_list:
+#   - <host name>
+# 
+# ignore.yml (dummy file to keep ansible happy)
+#
+# ---
+# ignore:
+#   ignore: 0
+
+
+- hosts: local
+  vars_files:
+  - "{{ working_dir }}/ansible_vars.yml"
+  - [ "{{ working_dir }}/ansible_test_group", "{{ working_dir }}/ignore.yml" ]
+ 
+  tasks:
+  - name: include dynamic variables
+    include_vars:
+      file: "{{ working_dir }}/ansible_run_vars.yml"
+      name: dyn_data
+
+#
+# From the  ansible_test_group file read in the hosts, ssh_key and user and
+# build the list of hosts.  Note, that the ssh_key needs to be set in the config
+# file..  
+# zathras will default to the users ssh key value if none is provided.
+# Format of the file:
+#
+# Once the list is built, we need to do a login to avoid ansible runnning into a
+# login prompt.
+# 
+  - name: assign test hosts
+    add_host:
+      name: "{{ test_hostname }}"
+      groups: test_group
+      ansible_user: "{{ config_info.test_user }}"
+      ansible_ssh_private_key_file: "{{ config_info.ssh_key }}"
+    loop: "{{ test_group_list }}"
+    loop_control:
+      loop_var: test_hostname
+  - name: initial login to test hosts
+    command: "ssh -oStrictHostKeyChecking=no {{ dyn_data.ssh_i_option }} {{ config_info.test_user }}@{{ test_hostname }} \"cat /etc/passwd > /dev/null\""
+    loop: "{{ test_group_list }}"
+    loop_control:
+      loop_var: test_hostname
+  - name: make the results dir.
+    file:
+      path: "{{ working_dir }}/reboot_boot_info"
+      state: directory
+
+#
+# Perform the reboot measurement test.
+# 
+- hosts: test_group
+  user: root
+  become: true
+  vars_files: "{{ working_dir }}/ansible_vars.yml"
+  gather_facts: no
+  tasks:
+
+  - name: grab reboot start time
+    command: "date -u +%s"
+    register: reboot_start
+
+  - name: Simply reboot the system
+    reboot:
+      reboot_timeout: 1800
+
+  - name: grab reboot end time
+    command: "date -u +%s"
+    register: reboot_end
+
+  - name: Report creation time
+    lineinfile:
+      path: "/tmp/reboot_boot_info/reboot_timings"
+      line: "reboot time: {{ (reboot_end.stdout) | int  - (reboot_start.stdout) | int }}"
+      create: yes
+
+  - name: obtain reboot timings
+    shell: "{{ config_info.user_parent_home_dir }}/{{ config_info.test_user }}/tools_bin/gather_boot_info reboot"
+
+  - name: Move directory for iteration purpose.
+    shell: mv /tmp/reboot_boot_info /tmp/reboot_boot_info_{{ iteration }}
+
+  - name: Compress directory for retrival
+    archive:
+      path: /tmp/reboot_boot_info_{{ iteration }}
+      dest: /tmp/reboot_boot_info_{{ iteration }}.tgz
+
+  - name: archive data
+    fetch:
+      src: "/tmp/reboot_boot_info_{{ iteration }}.tgz"
+      dest: "{{ working_dir }}/reboot_boot_info/"
+      flat: yes
+
