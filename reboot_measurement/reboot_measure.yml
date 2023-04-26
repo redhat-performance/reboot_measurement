@@ -108,6 +108,8 @@
   - name: Simply reboot the system
     reboot:
       reboot_timeout: 1800
+      test_command: /usr/bin/whoami
+      connect_timeout: 5
 
   - name: grab reboot end time
     command: "date -u +%s"
