@@ -107,7 +107,7 @@
 
   - name: Simply reboot the system
     reboot:
-      reboot_timeout: 6
+      reboot_timeout: 240
 
   - name: wait for ssh to come up
     local_action: wait_for
