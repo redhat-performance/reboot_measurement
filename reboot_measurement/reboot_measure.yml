@@ -107,14 +107,14 @@
 
   - name: Simply reboot the system
     reboot:
-      reboot_timeout: 240
+      reboot_timeout: 1800
 
   - name: wait for ssh to come up
     local_action: wait_for
       host="{{ dyn_data.test_hostname }}"
       port=22
       state=started
-      delay=1
+      delay=10
       timeout=1200
 
   - name: grab reboot end time
