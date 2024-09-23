@@ -117,7 +117,7 @@
     register: reboot_end
 
   - name: Generate test metadata
-      shell: "{{ config_info.user_parent_home_dir }}/{{ config_info.test_user }}/tools_bin/test_header_info \
+    shell: "{{ config_info.user_parent_home_dir }}/{{ config_info.test_user }}/tools_bin/test_header_info \
         --front_matter \
         --results_file /tmp/reboot_boot_info/reboot_timings \
         --host {{ sysname }} \
