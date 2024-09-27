@@ -5,7 +5,7 @@
 working_dir=`pwd`
 iterations=1
 boot_version="v1.0"
-test_name = "reboot_measurement"
+test_name="reboot_measurement"
 
 usage()
 {
