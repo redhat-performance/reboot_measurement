@@ -116,6 +116,18 @@
     command: "date -u +%s"
     register: reboot_end
 
+  - name: Ensure tmp parent directories exist
+    file:
+      path: "/tmp/reboot_boot_info"
+      state: directory
+      mode: '0755'
+
+  - name: Create tmp reboot_timings file
+    file:
+      path: "/tmp/reboot_boot_info/reboot_timings"
+      state: touch
+      mode: '0644'
+
   - name: Generate test metadata
     shell: "{{ config_info.user_parent_home_dir }}/{{ config_info.test_user }}/tools_bin/test_header_info \
         --front_matter \
