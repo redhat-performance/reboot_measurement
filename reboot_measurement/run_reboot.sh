@@ -4,6 +4,8 @@
 #
 working_dir=`pwd`
 iterations=1
+boot_version="v1.0"
+test_name = "reboot_measurement"
 
 usage()
 {
@@ -133,5 +135,5 @@ done
 cd $working_dir
 for iteration in  `seq 1 1 $iterations`
 do
-	ansible-playbook -i ./inventory --extra-vars "working_dir=${working_dir} iteration=${iteration} ansible_python_interpreter=auto" ${working_dir}/workloads/reboot_me*/reboot_measurement/reboot_measure.yml
+	ansible-playbook -i ./inventory --extra-vars "working_dir=${working_dir} iteration=${iteration} ansible_python_interpreter=auto sys_type=${sys_type} to_tuned_setting=${tuned_setting} sysname=${sysname} boot_version=${boot_version} test_name=${test_name}" ${working_dir}/workloads/reboot_me*/reboot_measurement/reboot_measure.yml
 done

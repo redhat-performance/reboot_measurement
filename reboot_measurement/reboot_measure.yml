@@ -116,6 +116,16 @@
     command: "date -u +%s"
     register: reboot_end
 
+  - name: Generate test metadata
+    shell: "{{ config_info.user_parent_home_dir }}/{{ config_info.test_user }}/tools_bin/test_header_info \
+        --front_matter \
+        --results_file /tmp/reboot_boot_info/reboot_timings \
+        --host {{ sysname }} \
+        --sys_type {{ sys_type }} \
+        --tuned {{ to_tuned_setting }} \
+        --results_version {{ boot_version }} \
+        --test_name {{ test_name }}"
+
   - name: Report creation time
     lineinfile:
       path: "/tmp/reboot_boot_info/reboot_timings"
